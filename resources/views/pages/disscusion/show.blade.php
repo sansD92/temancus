@@ -9,7 +9,7 @@
                         <div class="fs-2 fw-bold color-gray me-2 mb-0"> Disscussion</div>
                         <div class="fs-2 fw-bold color-gray me-2 mb-0">></div>
                     </div>
-                    <h2 class="mb-8">How to add a custom validation in Laravel?</h2>
+                    <h2 class="mb-8">{{ $discussions->title}}</h2>
                 </div>
             </div>
             <div class="row">
@@ -17,43 +17,39 @@
                     <div class="card card-disscusions">
                         <div class="row">
                             <div class="col-1 d-flex flex-column justify-content-start align-items-center">
-                                <a href="">
-                                    <img src="{{ url('assets/images/like.png')}}" alt="like" class="like-icon mb-1">
+                                <a id="discussion-like" href="javascript:;" data-liked="{{ $discussions->liked() }}">
+                                    <img src="{{ $discussions->liked() ? $likedImage : $notLikedImage }}"
+                                     alt="Like" id="discussion-like-icon" class="like-icon mb-1">
                                 </a>
-                                <span class="fs-4 color-gray mb-0">12</span>
+                                <span id="discussion-like-count" class="fs-4 color-gray mb-0">{{ $discussions->likeCount }}</span>
                             </div>
                             <div class="col-11">
                                 <p>
-                                    I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the I am working on a blogging application in Laravel 8. There are 4 user roles, among 
-                                    which, the 
+                                    {!! $discussions->content !!}
                                 </p>
                                 <div class="mb-3">
-                                    <a href=""><span class="badge rounded-pill text-bg-light">Facade</span></a>
+                                    <a href="{{ route('discussions.categories.show', $discussions->category->slug)}}">
+                                        <span class="badge rounded-pill text-bg-light">{{ $discussions->category->name}}</span></a>
                                 </div>
                                 <div class="row align-items-start justify-content-between">
                                     <div class="col">
                                         <span>
                                             <a href="javascript:;" id="share-disscusions"><small>Share</small></a>
-                                            <input type="text" value="{{ url('disscusions/show')}}" id="current-url" class="d-none">
+                                            <input type="text" value="{{ route('discussions.show', $discussions->slug)}}" id="current-url" class="d-none">
                                         </span>
                                     </div>
                                     <div class="col-5 col-lg-3 d-flex">
                                         <a href="" class="card-disscusions-show-avatar-wrapper flex-shrink-0 rounded-circle overflow-hidden me-1">
-                                            <img src="{{ url('assets/images/avatar.png')}}" alt="">
+                                            <img src="{{ filter_var($discussions->user->picture, FILTER_VALIDATE_URL)
+                                                ? $discussions->user->picture : Storage::url($discussions->user->picture) }}" alt="" class="avatar rounded-circle">
                                         </a>
                                         <div class="fs-12px lh-1">
                                             <span class="text-primary">
                                                 <a href="" class="fw-bold d-flex align-items-start text-break mb-1">
-                                                    adjiedwisandy
+                                                    {{ $discussions->user->username}}
                                                 </a>
                                             </span>
-                                            <span class="color-gray">7 hours ago</span>
+                                            <span class="color-gray">{{ $discussions->created_at->diffForHumans()}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -130,23 +126,25 @@
                        
 
                     </div>
+                    @guest
                     <div class="fw-bold text-center">Please 
-                        <a href="#" class="text-underline fw-bold text-purple">sign in</a> 
+                        <a href="{{ route('login')}}" class="text-underline fw-bold text-purple">sign in</a> 
                             or
-                         <a href="#" class="text-underline fw-bold text-purple">create an account</a> 
+                         <a href="{{ route('auth.sign-up')}}" class="text-underline fw-bold text-purple">create an account</a> 
                          to participate in this discussion. 
                         </div>
+                    @endguest
+                    
                 </div>
 
                 <div class="col-12 col-lg-4">
                     <div class="card">
                         <h3>All Categories</h3>
                         <div>
-                            <a href="">
-                                <span class="badge rounded-pill text-bg-light">Eloquent</span>
-                                <span class="badge rounded-pill text-bg-light">Facade</span>
-                                <span class="badge rounded-pill text-bg-light">Helper</span>
-                            </a>
+                            @foreach ($categories as $category)
+                            <a href="{{ route('discussions.categories.show', $category->slug)}}">
+                                <span class="badge rounded-pill text-bg-light">{{ $category->name}}</span></a>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -172,7 +170,43 @@
 
                 var alertContainer = alert.find('.container');
                 alertContainer.first().text('Link to this disscusions copied successfully');
+            });
+
+            $('#discussion-like').click(function() {
+
+
+                // dapatkan data apakah discussion ini sudah pernah di like oleh user
+                var isLiked = $(this).data('liked');
+                // tetukan route like ajax, berdasarkan dengan apakah ini sudah di like atau belum
+                var likeRoute = isLiked ? '{{ route("discussions.like.unlike", $discussions->slug) }}'
+                : '{{route("discussions.like.like", $discussions->slug) }}';
+                // lakukan proses ajax
+                // jika ajax berhasil maka dapatkan status jsonnya
+                $.ajax({
+                    method: 'POST',
+                    url: likeRoute,
+                    data: {
+                        '_token': '{{ csrf_token() }}'
+                    }
+                })
+                    .done(function(res) {
+                        // jika statusnya success maka isi counter like dengan data counter like dari jsonnya
+                        if (res.status === 'success') {
+                            $('#discussion-like-count').text(res.data.likeCount);
+
+                            if (isLiked) {
+                                $('#discussion-like-icon').attr('src', '{{ $notLikedImage }}');
+                            }
+                            else {
+                                $('#discussion-like-icon').attr('src', '{{ $likedImage }}');
+                            }
+
+                            $('#discussion-like').data('liked', !isLiked);
+                        }
+                    
+                })
             })
-        })
+
+        });
     </script>
 @endsection

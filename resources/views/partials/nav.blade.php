@@ -12,7 +12,7 @@
             <a class="nav-link {{ Route::currentRouteName()=== 'home' ? 'active' : '' }}" aria-current="page" href="{{ route('home')}}">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {{ Route::currentRouteName()=== 'disscusion' ? 'active' : '' }}" aria-current="page" href="{{ route('disscusion')}}">Disscussion</a>
+            <a class="nav-link {{ Route::currentRouteName()=== 'discussions.index' ? 'active' : '' }}" aria-current="page" href="{{ route('discussions.index')}}">Discussion</a>
           </li>
           <li class="nav-item">
             <a class="nav-link text-nowrap" aria-current="page" href="#">About Us</a>
@@ -25,13 +25,40 @@
             </div>
         </form>
         <ul class="navbar-nav ms-auto my-2 my-lg-0">
-            <li class="nav-item my-auto">
-                <a class="nav-link text-nowrap {{ Route::currentRouteName()=== 'login' ? 'active' : '' }}" href="{{ route('login')}}">Log In</a>
+        @auth
+        <li class="nav-item my-auto dropdown">
+          <a class="nav-link p-0 d-flex align-item-center" href="javascript:;" data-bs-toggle="dropdown">
+            <div class="avatar-nav-wrapper me-2">
+              <img src="{{ filter_var(auth()->user()->picture, FILTER_VALIDATE_URL)
+              ? auth()->user()->picture : Storage::url(auth()->user()->picture) }}" alt="{{ auth()->user()->username}}" class="avatar rounded-circle">
+            </div>
+            <span class="fw-bold">{{ auth()->user()->username }}</span>
+          </a>
+          <ul class="dropdown-menu mt-2">
+            <li>
+              <a class="dropdown-item" href="">My Profile</a>
             </li>
-            <li class="nav-item ps-1 pe-0">
-                <a class="btn btn-primary-white" href="{{ route('sign-up')}}">Sign Up</a>
+            <li>
+              <form action="{{ route('auth.logout')}}" method="POST">
+                @csrf
+                <button type="submit" class="dropdown-item">Log Out</button>
+              </form>
             </li>
-        </ul>
+          </ul>
+
+      </li>
+        @endauth
+        @guest
+        
+          <li class="nav-item my-auto">
+              <a class="nav-link text-nowrap {{ Route::currentRouteName()=== 'login' ? 'active' : '' }}" href="{{ route('login')}}">Log In</a>
+          </li>
+          <li class="nav-item ps-1 pe-0">
+              <a class="btn btn-primary-white" href="{{ route('auth.sign-up')}}">Sign Up</a>
+          </li>
+      
+        @endguest
+      </ul>
       </div>
     </div>
   </nav>

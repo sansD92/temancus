@@ -5,15 +5,27 @@
         <div class="container">
             <div class="mb-4">
                 <div class="mb-3 d-flex align-items-center justify-content-between">
-                    <h2 class="me-4 mb-8">All discussions</h2>
+                    <h2 class="me-4 mb-8">@if (isset($search)) {{ "Search results for \"$search"}} @else {{ 'all Discussions'}}
+                    @endif
+                        <span>
+                            {{ isset($withCategory) ? ' About ' . $withCategory->name : ''}}
+                        </span>
+                </h2>
                     <div>
-                        51,875 Disscussion
+                        {{ $discussions->total()
+                        . Str::plural(' Discussion',$discussions->total()) }}
                     </div>
                 </div>
-                <a href="" class="btn btn-primary"> Log In to Create Disscussion</a>
+                @auth
+                <a href="{{ route('discussions.create')}}" class="btn btn-primary">Create Disscussion</a>
+                @endauth
+                @guest
+                <a href="{{ route('login')}}" class="btn btn-primary"> Log In to Create Disscussion</a>
+                @endguest
             </div>
             <div class="row">
                 <div class="col-12 col-lg-8 mb-5 mb-lg-0">
+                    @forelse ($discussions as $discussion)
                     <div class="card card-disscusions">
                         <div class="row">
                             <div class="col-12 col-lg-2 mb-1 mb-lg-0 d-flex flex-row flex-lg-column align-items-end">
@@ -25,87 +37,59 @@
                                 </div>
                             </div>
                             <div class="col-12 col-lg-10">
-                                <a href="">
-                                    <h3>How to add a custom validation in laravel?</h3>
+                                <a href="{{ route('discussions.show', $discussion->slug)}}">
+                                    <h3>{{ $discussion->title}}</h3>
                                 </a>
                                 <p>
-                                    I am working on a blogging application in Laravel 8. There are 4 user roles, among which, the "...
+                                    {{ $discussion->content_preview}}
                                 </p>
                                 <div class="row">
                                     <div class="col me-1 me-lg-2">
-                                        <a href="">
-                                            <span class="badge rounded-pill text-bg-light">Eloquent</span>
+                                        <a href="{{ route('discussions.categories.show', $discussion->category->slug)}}">
+                                            <span class="badge rounded-pill text-bg-light">{{ $discussion->category->name}}</span>
                                         </a>
                                     </div>
                                     <div class="col-5 col-lg-4">
                                         <div class="avatar-sm-wrapper d-inline-block">
-                                            <a href="" class="me-1">
-                                                <img src="{{ url('assets/images/users.png')}}" alt="" class="avatar rounded-circle">
+                                            <a href="{{ route('user.show', $discussion->user->username)}}" class="me-1">
+                                                <img src="{{ filter_var($discussion->user->picture, FILTER_VALIDATE_URL)
+                                                    ? $discussion->user->picture : Storage::url($discussion->user->picture) }}" 
+                                                    alt="{{ $discussion->user->username}}" class="avatar rounded-circle">
                                             </a>
                                         </div>
                                         <span class="fs-12px">
-                                            <a href="" class="me-1 fw-bold">
-                                                Adjiesandy
+                                            <a href="{{ route('user.show', $discussion->user->username)}}" class="me-1 fw-bold">
+                                                {{ $discussion->user->username}}
                                             </a>
-                                            <span class="color-gray"> 8 hours ago </span>
+                                            <span class="color-gray"> {{ $discussion->created_at->diffForHumans()}} </span>
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    @empty
+                        <div class="card card-disscusions">
+                            Currently no discussion yet
+                        </div>
+                    @endforelse
+                  
+                    {{ $discussions->links()}}
 
-                    <div class="card card-disscusions">
-                        <div class="row">
-                            <div class="col-12 col-lg-2 mb-1 mb-lg-0 d-flex flex-row flex-lg-column align-items-end">
-                                <div class="text-nowrap me-2 me-lg-0">
-                                    3 likes
-                                </div>
-                                <div class="text-nowrap color-gray">
-                                    9 Answer
-                                </div>
-                            </div>
-                            <div class="col-12 col-lg-10">
-                                <a href="">
-                                    <h3>How to add a custom validation in laravel?</h3>
-                                </a>
-                                <p>
-                                    I am working on a blogging application in Laravel 8. There are 4 user roles, among which, the "...
-                                </p>
-                                <div class="row">
-                                    <div class="col me-1 me-lg-2">
-                                        <a href="">
-                                            <span class="badge rounded-pill text-bg-light">Eloquent</span>
-                                        </a>
-                                    </div>
-                                    <div class="col-5 col-lg-4">
-                                        <div class="avatar-sm-wrapper d-inline-block">
-                                            <a href="" class="me-1">
-                                                <img src="{{ url('assets/images/users.png')}}" alt="" class="avatar rounded-circle">
-                                            </a>
-                                        </div>
-                                        <span class="fs-12px">
-                                            <a href="" class="me-1 fw-bold">
-                                                Adjiesandy
-                                            </a>
-                                            <span class="color-gray"> 8 hours ago </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                 </div>
                 <div class="col-12 col-lg-4">
                     <div class="card">
                         <h3>All Categories</h3>
                         <div>
-                            <a href="">
-                                <span class="badge rounded-pill text-bg-light">Eloquent</span>
-                                <span class="badge rounded-pill text-bg-light">Facade</span>
-                                <span class="badge rounded-pill text-bg-light">Helper</span>
-                            </a>
+                            @foreach ($categories as $category)
+                            <a href="{{ route('discussions.categories.show', $category->slug)}}">
+                                <span class="badge rounded-pill text-bg-light">{{ $category->name}}</span></a>
+                            @endforeach
+                           
+                             
+                            
                         </div>
                     </div>
                 </div>

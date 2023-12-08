@@ -185,4 +185,8 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+
+    // ENV MAPPING
+    'avatar_generator_url' => env('AVATAR_GENERATOR_URL'),
+
 ];

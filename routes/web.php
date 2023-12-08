@@ -17,23 +17,40 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
-Route::get('login', function () {
-    return view('pages.auth.login');
-})->name('login');
+Route::middleware(['auth'])->group(function () {
+    Route::namespace('App\Http\Controllers')->group(function() {
+        Route::resource('discussions', DiscussionsController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy']);
+        Route::post('discussions/{discussion}/like', 'LikeController@discussionLike')
+        ->name('discussions.like.like');
+        Route::post('discussions/{discussion}/unlike', 'LikeController@discussionUnLike')
+        ->name('discussions.like.unlike');
+    });
+});
 
-Route::get('sign-up', function () {
-    return view('pages.auth.sign-up');
-})->name('sign-up');
+Route::namespace('App\Http\Controllers\Auth')->group(function(){
+    Route::get('login', 'LoginController@show')->name('login');
+    Route::post('login', 'LoginController@login')->name('auth.login');
+    Route::post('logout', 'LoginController@logout')->name('auth.logout');
+    Route::get('sign-up', 'SignUpController@show')->name('auth.sign-up');
+    Route::post('sign-up', 'SignUpController@Sign_up')->name('auth.sign-up.sign-up');
+});
 
-Route::get('disscusion', function () {
-    return view('pages.disscusion.index');
-})->name('disscusion');
-Route::get('disscusion/show', function () {
-    return view('pages.disscusion.show');
-})->name('show');
-Route::get('disscusion/create', function () {
-    return view('pages.disscusion.form');
-})->name('disscusion.create');
+Route::namespace('App\Http\Controllers')->group(function(){
+    Route::resource('discussions', DiscussionsController::class)
+    ->only(['index', 'show']);
+    Route::get('discussions/categories/{category}', 'CategoryController@show')
+    ->name('discussions.categories.show');
+
+});
+
+
+
+
+// Route::get('discussion/show', function () {
+//     return view('pages.disscusion.show');
+// })->name('show');
+
 Route::get('answer/1', function () {
     return view('pages.answer.form');
 })->name('answer.edit');
